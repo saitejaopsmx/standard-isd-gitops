@@ -1,34 +1,17 @@
 #!/bin/bash
-helm version
-git --version
+#helm version
+#git --version
 cd /repo/
-ls -ltr
-sleep 30
-helm repo add isd https://helmcharts.opsmx.com/
-if [ $? != 0 ]; then
-  n=0
-  until [ "$n" -ge 3 ]
-  do
-  echo Retrying.....
-  helm repo add isd https://helmcharts.opsmx.com/
-  if [ $? != 0 ]; then
-    echo "ERROR: Failed to add helm repo"
-  else
-    echo "Repo added successfully.."
-    break
-  fi
-  n=$((n+1))
-  sleep 5
-  done
-else
-  echo "Repo added successfully.."
-fi
-helm repo list
-helm repo update
-helm search repo --versions
-chartversion=$(helm search repo isd/oes --versions | awk '{print $2,$3}' | grep "${version}" | head -1 | awk -F ' ' '{print $1}')
-helm pull isd/oes --version="$chartversion"
-tar -xf oes-"$chartversion".tgz
+#ls -ltr
+#helm repo add isd https://helmcharts.opsmx.com/
+#helm repo list
+#helm repo update
+#helm search repo --versions
+#chartversion=$(helm search repo isd/oes --versions | awk '{print $2,$3}' | grep "${version}" | head -1 | awk -F ' ' '{print $1}')
+#helm pull isd/oes --version="$chartversion"
+#tar -xf oes-"$chartversion".tgz
+#tar -xf isd-40.tgz
+#git clone https://github.com/OpsMx/enterprise-spinnaker.git -b v4.0
 if [ $? -eq 0 ]; then  
      echo "##################Sucessfully downloaded the helm chart######################"
 else
@@ -48,7 +31,7 @@ sed -i 's/| *b64enc *//' /repo/oes/templates/sapor-gate/sapor-gate-secret.yaml
 sed -i 's/^data:/stringData:/' /repo/oes/templates/sapor-gate/sapor-gate-secret.yaml
 sed -i 's/{{ .Values.saporgate.config.password }}/encrypted:saporpassword:saporpassword/' /repo/oes/config/sapor-gate/gate-local.yml
 ####################################################################################################################
-helm template isd /repo/oes/ -f values.yaml --output-dir=isd
+helm template isd /repo/oes/ -f values.yaml -n $namespace --output-dir=isd
 if [ $? -eq 0 ]; then  
      echo "######################Helm template is sucessfull into isd directory###########################"
 else
@@ -59,8 +42,8 @@ ls -l isd/oes/
 ls -l isd/oes/templates/
 rm -rf /repo/isd/oes/charts/spinnaker/templates/hooks/
 rm -rf /repo/isd/oes/templates/hooks/cleanup.yaml
-rm -rf /repo/oes/
-rm -rf oes-${chartversion}.tgz
+#rm -rf /repo/oes/
+#rm -rf oes-${chartversion}.tgz
 #####################################committing tempates to github repo################################
 git status
 git add .

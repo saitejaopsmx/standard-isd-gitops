@@ -1,9 +1,20 @@
 #####################################################
 global:
+  # Set to true if user need to access Spinnaker seperately
+  spinnakerUrl: false
   ## URL that will be used to access ISD. MUST BE CHANGED
   ## Ensure that this URL is reachable from your browser. Either DNS name server record must exist or "hosts" file must be updated
   oesUI:
-    host: isd.dev.example.com
+    protocol: http # Set to https if global.certManager and global.ssl is true
+    host: ISD.REPLACE.THIS.WITH.YOURCOMPANY.COM  # Replace the ISD URL
+
+  spinDeck:
+    protocol: http # Set to https if global.certManager and global.ssl is true
+    host: SPINNAKER.REPLACE.THIS.WITH.YOURCOMPANY.COM   # Replace the Spinnaker URL
+
+  # Set to true if you are using the saml/Okta for Spinnaker
+  auth:
+    saml: false
 
   ssl:
     enabled: false # Set to true if using "httpS" urls. TLS certificates must be generated for the above URL
@@ -16,7 +27,7 @@ global:
   createIngress: true
 
   #Only for trial purposes, pod-baesd git is installed and automatically configured
-  gitea: 
+  gitea:
     enabled: false # Set to true for trial-install only
 
   ###############################################################################
@@ -27,6 +38,14 @@ global:
   ## ldap configuration used in oes-gate, oes-platform and spinnaker gate for authentication and authorization
   ldap:
     managerPassword: encrypted:ldappassword:ldappassword
+
+   ## Valid admin details for ISD authorization
+  saporgate:
+    config:
+      username: admin       #Name of the valid user in your service provider
+      adminGroups: admin    #Name of the valid admin group in your service provider
+      password: encrypted:saporpassword:saporpassword  #password for the saporgate
+
   minio:
     accessKey: encrypted:miniopassword:miniopassword
     secretKey: encrypted:miniopassword:miniopassword
@@ -40,7 +59,6 @@ spinnaker:
       organization: YOUR_ORG_NAME_OR_YOUR_USER_NAME_IF_NO_ORG
       repository: YOUR_REPO_NAME # repo name for GitOps Halyard, will be created if "githubcreationHook" is set to true
       username: YOUR_USER_NAME  # Username to authenticate with git/stash repo
-      token: encrypted:gittoken:gittoken  # Token corresponding to above username
       dynamicAccRepository: SAME_AS_REPOSITORY_ABOVE # Repo name of the GitOps Dynamic Accounts Directory, Can be same as "repository"
 
       ########################################################################################
@@ -54,7 +72,8 @@ spinnaker:
       halConfigBranch: main        # Branch for the "repository", recommend to keep "main"
       halConfigPath: /               #relative path from repository root folder
       dynAccntConfigPath: /          #relative path from repository root folder
-      
+      token: encrypted:gittoken:gittoken  # Token corresponding to spinnaker.gitopsHalyard.repo.username
+
   ########################################################################################
   # Lines below this do not need to be changed except where external SSO and DBs are used
   ########################################################################################
@@ -67,13 +86,6 @@ spinnaker:
         password: encrypted:saporpassword:saporpassword     # Use credentials corresponding to saporgate.config.password
 
 ####################################################
-
-db:
-  url: jdbc:postgresql://oes-db:5432
-  username: postgres
-  password: encrypted:dbpassword:dbpassword
-
-###############################################################################
 gate:
   config:
     #####################################################
@@ -98,42 +110,23 @@ gate:
       jksSecretName: oessamljks
       metadataSecretName: oesmetadataxml
 
-    #####################################################
-    #OAUTH2 Authentication for GitHub
-    #####################################################
-    oauth2:
-      enabled: false
-      client:
-        clientId: #CLIENT_ID
-        clientSecret: #CLIENT_SECRET_ID
-        accessTokenUri: https://github.com/login/oauth/access_token
-        userAuthorizationUri: https://github.com/login/oauth/authorize
-        scope: user-email
-      resource:
-        userInfoUri: https://api.github.com/user
-      userInfoMapping:
-        email: email
-        firstName: firstname
-        lastName: name
-        username: login
-      provider: GITHUB
-
-###############################################################################
-rabbitmq:
-  username: rabbitmq
-  password: encrypted:rabbitmqpassword:rabbitmqpassword
-
-###############################################################################
-saporgate:
-  config:
-    username: admin      # User name with admin permissions and belonging to admin groups defined in platform service
-    password: encrypted:saporpassword:saporpassword # Any generic String, need not be the real password
-
-###############################################################################
-## Details of redis-master image for OES
+#######################################################################################
+# Lines below this do not need to be changed except where external Redis and DBs is used
+########################################################################################
 redis:
   url: redis://:encrypted:redispassword:redispassword@{{ .Release.Name }}-redis-master
   password: encrypted:redispassword:redispassword
+#####################################################
+db:
+  url: jdbc:postgresql://oes-db:5432
+  username: postgres
+  password: encrypted:dbpassword:dbpassword
+########################################################################################
+# Do not change the below parameter leave it as it is
+########################################################################################
+rabbitmq:
+  username: rabbitmq
+  password: encrypted:rabbitmqpassword:rabbitmqpassword
 #####################################################
 # OpenLDAP custom configuration; will override default configuration of openldap helm chart
 openldap:
